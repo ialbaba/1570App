@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<%- include('partials/head.ejs') %>
+<body>
+    
+    <div class="container col-xl-10 col-xxl-8 px-4 py-5">
+        <div class="row align-items-center g-lg-5 py-5">
+          <div class="col-lg-7 text-center text-lg-start">
+            <h1 class="display-4 fw-bold lh-1 mb-3">Look Up A City</h1>
+            <p class="col-lg-10 fs-4">On the right input completly or imcompletly a city name and we'll return the weather forecase for that the city that most closesly matches.</p>
+          </div>
+          <div class="col-md-10 mx-auto col-lg-5">
+            <form class="p-4 p-md-5 border rounded-3 bg-light">
+              <div class="form-floating mb-3">
+                <input name = "cityName" type="text" class="form-control" id="floatingInput" placeholder="Pittburgh">
+                <label for="floatingInput">Enter A City Name</label>
+              </div>
+              <button class="w-100 btn btn-lg btn-primary" type="submit">Search</button>
+            </form>
+          </div>
+        </div>
+
+
+        <div id = "temp" class="row row-cols-1 row-cols-md-3 mb-3 text-center " style = "display: none">
+            <div class="col mx-auto">
+              <div class="card mb-4 rounded-3 shadow-sm">
+                <div class="card-header py-3">
+                  <h4 id = "cityName" class="my-0 fw-normal">Houston</h4>
+                </div>
+                <div class="card-body">
+                  <h1 id = "max" class="mb-0 card-title pricing-card-title">88°<small class="text-muted fw-light"> F</small></h1>
+                  <p class="mb-7 text-muted fw-light"> High</p>
+                  <h1 id = "min" class="mb-0 card-title pricing-card-title">68°<small class="text-muted fw-light"> F</small></h1>
+                  <p class="mb-7 text-muted fw-light"> Low</p>
+                </div>
+              </div>
+            </div>
+          </div>
+      </div>
+
+      
+      <script>
+            const key = "iAQGA5hpsbi8LrzGPwOGweOdfDhum41u";
+            const cityForm = document.querySelector("form");
+
+
+
+            const getCity = async (city) => {
+                const url = "http://dataservice.accuweather.com/locations/v1/cities/autocomplete";
+                const query = `?apikey=${key}&q=${city}`;
+                console.log(url + query);
+                const res = await fetch(url + query);
+                const data = await res.json();
+                return data[0];
+            }
+
+
+            const getWeather = async (locationKey) => {
+                const url = "http://dataservice.accuweather.com/forecasts/v1/daily/1day/";
+                const query = `${locationKey}?apikey=${key}`;
+                const res = await fetch(url + query);
+                const data = await res.json();
+                console.log(data.DailyForecasts[0]);
+                return data.DailyForecasts[0];
+            }
+
+            const changeUI =  (name, max, min) => {
+                const city = document.getElementById("cityName");
+                const minText = document.getElementById("min");
+                const maxText = document.getElementById("max");
+                const card = document.getElementById("temp");
+
+
+                city.innerHTML = name ;
+                minText.innerHTML = min + "° F";
+                maxText.innerHTML = max + "° F";
+                card.style.display = "block"; 
+            }
+
+            cityForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                const city = cityForm.cityName.value.trim();
+                cityForm.reset();
+                getCity(city).then(r => {
+                    console.log(r);
+                    const location = r.Key;
+                    const cityName = r.LocalizedName + ", " + r.Country.ID;
+                    getWeather(location).then(r => {
+                        const min = r.Temperature.Minimum.Value;
+                        const max = r.Temperature.Maximum.Value;
+                        changeUI(cityName, max, min);
+                    });                   
+
+                });
+
+            })
+
+
+
+      </script>
+</body>
+</html>
+
